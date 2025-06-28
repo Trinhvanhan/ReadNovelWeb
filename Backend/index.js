@@ -10,7 +10,7 @@ import ApiRouter from './routes/index.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
@@ -18,11 +18,11 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(helmet());
 
-mongoose.connect('mongodb://localhost:27017/comicApp').then(() => console.log('MongoDB connected'))
+mongoose.connect('mongodb://localhost:27017/novelWeb').then(() => console.log('MongoDB connected'))
   .catch(err => console.log('MongoDB connection error:', err));
 
 // Use your ApiRouter
-app.use('/api', ApiRouter);
+app.use('/', ApiRouter);
 
 
 // Start

@@ -9,13 +9,30 @@ const userSchema = new mongoose.Schema({
   preferences: {
     theme: { type: String, default: 'light' },
     fontSize: { type: String, default: 'medium' },
+    autoBookmark: { type: Boolean, default: true },
     notifications: {
-      email: { type: Boolean, default: true },
-      push: { type: Boolean, default: false },
-      newChapters: { type: Boolean, default: true },
-      recommendations: { type: Boolean, default: true }
+      email: {
+        enabled: { type: Boolean, default: true },
+        newChapters: { type: Boolean, default: true },
+        recommendations: { type: Boolean, default: true },
+        systemUpdates: { type: Boolean, default: true },
+        frequency: { type: String, default: 'immediate' }
+      },
+      push: {
+        enabled: { type: Boolean, default: false },
+        newChapters: { type: Boolean, default: false },
+        recommendations: { type: Boolean, default: false },
+        systemUpdates: { type: Boolean, default: true }
+      },
+      inApp: {
+        enabled: { type: Boolean, default: true },
+        newChapters: { type: Boolean, default: true },
+        recommendations: { type: Boolean, default: true },
+        systemUpdates: { type: Boolean, default: true }
+      }
     }
   }
+
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

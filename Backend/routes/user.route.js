@@ -1,12 +1,11 @@
 import express from 'express';
-const userRouter = express.Router();
-const userController = require('../controllers/user.controller');
+import userController from '../controllers/user.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
-// CRUD routes
-userRouter.post('/', userController.createUser);
-userRouter.get('/', userController.getAllUsers);
-userRouter.get('/:id', userController.getUserById);
-userRouter.put('/:id', userController.updateUser);
-userRouter.delete('/:id', userController.deleteUser);
+const router = express.Router();
 
-module.exports = userRouter;
+router.get('/me', authenticate, userController.getCurrentUser);
+router.patch('/profile', authenticate, userController.updateProfile);
+router.patch('/preferences', authenticate, userController.updatePreferences);
+
+export default router;

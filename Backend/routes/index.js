@@ -1,8 +1,10 @@
 import userRouter from './user.route.js';
 import express from 'express';
 import authRouter from './auth.route.js';
-import categoryRouter from './category.route.js';
-
+import novelRouter from './novel.route.js';
+import searchRouter from './search.route.js';
+import readingRouter from './reading.route.js';
+import notificationRouter from './notification.route.js';
 // Define the base route for the API
 class ApiRouter {
 
@@ -15,16 +17,14 @@ class ApiRouter {
         this.router.use('/users', userRouter);
         
         this.router.use('/auth', authRouter);
-        
-        this.router.use('/chapters', chapterRouter);
-        
+                
         this.router.use('/orders', novelRouter);
         
-        this.router.use('/categories', categoryRouter);
+        this.router.use('/reading', readingRouter);
+        
+        this.router.use('/search', searchRouter);
 
-        this.router.use('/history', historyRouter);
-
-        this.router.use('/bookmark', bookmRouter);
+        this.router.use('/notifications', notificationRouter);
     }
 }   
 
