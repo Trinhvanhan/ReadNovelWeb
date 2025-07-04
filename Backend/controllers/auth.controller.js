@@ -1,10 +1,12 @@
 import authService from '../services/auth.service.js';
-
+import { setSessionCookies } from '../utils/setCookies.util.js';
 class AuthController {
   login = async (req, res) => {
     try {
-      const result = await authService.login(req.body);
-      res.status(200).json(result);
+      const {user, token, refreshToken} = await authService.login(req.body);
+      setSessionCookies(res, { token, refreshToken, user });
+      res.status(200).json({user});
+      
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
     }
@@ -12,8 +14,9 @@ class AuthController {
 
   signup = async (req, res) => {
     try {
-      const result = await authService.signup(req.body);
-      res.status(201).json(result);
+      const {user, token, refreshToken} = await authService.signup(req.body);
+      setSessionCookies(res, { token, refreshToken, user });
+      res.status(201).json({user});
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
     }

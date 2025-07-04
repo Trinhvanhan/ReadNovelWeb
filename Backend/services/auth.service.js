@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
 import { generateToken, generateRefreshToken, verifyToken } from '../utils/jwt.util.js';
-
+import { setSessionCookies } from '../utils/setCookies.util.js';
+import { set } from 'mongoose';
 class AuthService {
   async login({ email, password }) {
     const user = await User.findOne({ email });
@@ -14,11 +15,12 @@ class AuthService {
     const token = generateToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
+    
+
     return {
       user: formatUser(user),
       token,
-      refreshToken,
-      expiresAt: Date.now() + 3600000 // 1h in ms
+      refreshToken
     };
   }
 
@@ -36,8 +38,7 @@ class AuthService {
     return {
       user: formatUser(user),
       token,
-      refreshToken,
-      expiresAt: Date.now() + 3600000
+      refreshToken
     };
   }
 
@@ -50,7 +51,6 @@ class AuthService {
       const newToken = generateToken({ id: decoded.id, email: decoded.email });
       return {
         token: newToken,
-        expiresAt: Date.now() + 3600000
       };
     } catch {
       throw { status: 401, message: 'Invalid or expired token' };

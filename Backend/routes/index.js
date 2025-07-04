@@ -18,7 +18,7 @@ class ApiRouter {
         
         this.router.use('/auth', authRouter);
                 
-        this.router.use('/orders', novelRouter);
+        this.router.use('/novels', novelRouter);
         
         this.router.use('/reading', readingRouter);
         

@@ -14,7 +14,11 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: process.env.CLIENT_URL , // Hoặc dùng biến môi trường
+  credentials: true,               // Cho phép gửi cookie/session nếu cần
+}));
 app.use(morgan('dev'));
 app.use(helmet());
 
