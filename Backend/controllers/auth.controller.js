@@ -25,6 +25,7 @@ class AuthController {
   logout = async (req, res) => {
     try {
       // Invalidate token if using token blacklist (optional)
+      
       res.status(200).json({ message: 'Successfully logged out' });
     } catch (err) {
       res.status(500).json({ message: err.message });

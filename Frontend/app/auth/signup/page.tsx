@@ -9,7 +9,20 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
-import { signup } from "@/app/actions/auth"
+import { signup } from "@/lib/apis/auth.api"
+import { z } from "zod"
+
+const signupSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  })
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -22,16 +35,43 @@ export default function SignupPage() {
     setIsLoading(true)
     setErrors({})
 
-    const result = await signup(formData)
-
-    if (result.success) {
-      router.push("/library")
-      router.refresh()
-    } else {
-      setErrors(result.errors || {})
+    const rawData = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      confirmPassword: formData.get("confirmPassword") as string,
     }
 
-    setIsLoading(false)
+    const validatedData = signupSchema.safeParse(rawData)
+    if (!validatedData.success) {
+      setErrors(validatedData.error.flatten().fieldErrors)
+      setIsLoading(false)
+      return
+    }
+    const result = await signup(validatedData.data)
+    try {
+      if (result && result?.data?.user) {
+        router.push("/library")
+        router.refresh()
+      } else {
+        setErrors({
+          general: result.data.errors || ["An unexpected error occurred. Please try again."],
+        })
+        setIsLoading(false)
+        return
+      }
+    }
+    catch (error: any) {
+      if (error.response?.data?.errors) {
+        setErrors({ general: error.response.data.errors })
+      } else {
+        setErrors({ general: ["An unexpected error occurred. Please try again."] })
+      }
+    }
+    finally {
+      setIsLoading(false)
+    }
+
   }
 
   return (

@@ -9,7 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
-import { login } from "@/app/actions/auth"
+import { login } from "@/lib/apis/auth.api"
+import { z } from "zod"
+
+
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+})
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -20,17 +28,42 @@ export default function LoginPage() {
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setErrors({})
-
-    const result = await login(formData)
-
-    if (result.success) {
-      router.push("/library")
-      router.refresh()
-    } else {
-      setErrors(result.errors || {})
+    const rawData = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
     }
 
-    setIsLoading(false)
+    const validatedData = loginSchema.safeParse(rawData)
+
+    if (!validatedData.success) {
+      setErrors(validatedData.error.flatten().fieldErrors)
+      setIsLoading(false)
+      return
+    }
+    try {
+      const result = await login(rawData)
+
+      if (result && result.data && result.data.user) {
+        router.push("/library")
+        router.refresh()
+      } else {
+        setErrors({
+          general: result.data.errors || ["An unexpected error occurred. Please try again."],
+        })
+        setIsLoading(false)
+        return
+      }
+    }
+    catch (error: any) {
+      if (error.response?.data?.errors) {
+        setErrors({ general: error.response.data.errors })
+      } else {
+        setErrors({ general: ["An unexpected error occurred. Please try again."] })
+      }
+    }
+    finally {
+      setIsLoading(false)
+    }
   }
 
   return (
