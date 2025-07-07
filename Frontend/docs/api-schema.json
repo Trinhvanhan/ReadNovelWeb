@@ -1,0 +1,506 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Novel Reader API",
+    "description": "Comprehensive API for managing novels, users, reading progress, and notifications",
+    "version": "1.2.0",
+    "contact": {
+      "name": "API Support",
+      "email": "api-support@example.com",
+      "url": "https://docs.example.com/api"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.example.com/v1",
+      "description": "Staging server"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "User login",
+        "description": "Authenticate user and return access token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/novels": {
+      "get": {
+        "summary": "Get novels",
+        "description": "Retrieve paginated list of novels with filtering",
+        "tags": ["Novels"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "genre",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Novels retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NovelListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "summary": "Search novels",
+        "description": "Advanced search with filtering and sorting",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "genres",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["relevance", "rating", "popularity", "newest", "updated"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "securePassword123"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "expiresAt": {
+            "type": "integer",
+            "example": 1704067200000
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "user_123"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com/avatar.jpg"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin", "moderator"],
+            "example": "user"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/UserPreferences"
+          }
+        }
+      },
+      "UserPreferences": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": ["light", "dark", "system"],
+            "example": "dark"
+          },
+          "fontSize": {
+            "type": "string",
+            "enum": ["small", "medium", "large"],
+            "example": "medium"
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/NotificationPreferences"
+          }
+        }
+      },
+      "NotificationPreferences": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "boolean",
+            "example": true
+          },
+          "push": {
+            "type": "boolean",
+            "example": false
+          },
+          "newChapters": {
+            "type": "boolean",
+            "example": true
+          },
+          "recommendations": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "Novel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "novel_123"
+          },
+          "title": {
+            "type": "string",
+            "example": "The Chronicles of Aetheria"
+          },
+          "author": {
+            "type": "string",
+            "example": "Jane Smith"
+          },
+          "description": {
+            "type": "string",
+            "example": "An epic fantasy adventure..."
+          },
+          "coverImage": {
+            "type": "string",
+            "example": "https://example.com/covers/novel_123.jpg"
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["fantasy", "adventure", "magic"]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["dragons", "magic system", "coming of age"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ongoing", "completed", "hiatus"],
+            "example": "ongoing"
+          },
+          "language": {
+            "type": "string",
+            "example": "en"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5,
+            "example": 4.7
+          },
+          "ratingCount": {
+            "type": "integer",
+            "example": 1250
+          },
+          "viewCount": {
+            "type": "integer",
+            "example": 50000
+          },
+          "favoriteCount": {
+            "type": "integer",
+            "example": 3200
+          },
+          "chapterCount": {
+            "type": "integer",
+            "example": 45
+          },
+          "wordCount": {
+            "type": "integer",
+            "example": 180000
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T08:00:00Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-06-01T00:00:00Z"
+          },
+          "isCompleted": {
+            "type": "boolean",
+            "example": false
+          },
+          "isPremium": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "NovelListResponse": {
+        "type": "object",
+        "properties": {
+          "novels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Novel"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/AvailableFilters"
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "searchInfo": {
+            "$ref": "#/components/schemas/SearchInfo"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/SearchFacets"
+          }
+        }
+      },
+      "SearchResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Novel"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "relevanceScore": {
+                "type": "number",
+                "example": 0.95
+              },
+              "matchedTerms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["fantasy", "magic"]
+              },
+              "excerpt": {
+                "type": "string",
+                "example": "...magical realm where young Aria discovers her abilities..."
+              }
+            }
+          }
+        ]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "currentPage": {
+            "type": "integer",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 25
+          },
+          "totalCount": {
+            "type": "integer",
+            "example": 500
+          },
+          "hasNext": {
+            "type": "boolean",
+            "example": true
+          },
+          "hasPrev": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string",
+                "example": "The request contains invalid data"
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "email"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid email format"
+                    }
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:00Z"
+              },
+              "requestId": {
+                "type": "string",
+                "example": "req_123456789"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}
