@@ -5,7 +5,6 @@ const historySchema = new mongoose.Schema({
   novel: { type: mongoose.Schema.Types.ObjectId, ref: 'Novel', required: true },
   chapterNumber: { type: Number, required: true },
   position: { type: Number, default: 0 },
-  totalReadingTime: { type: Number, default: 0 }, // in seconds
   lastReadAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -275,17 +275,14 @@ GET /novels?page=1&limit=20&genre=fantasy&status=ongoing&sortBy=popularity&sortO
       "genres": ["fantasy", "adventure", "magic"],
       "tags": ["dragons", "magic system", "coming of age"],
       "status": "ongoing",
-      "language": "en",
-      "rating": 4.7,
-      "ratingCount": 1250,
-      "viewCount": 50000,
-      "favoriteCount": 3200,
-      "chapterCount": 45,
+      "rating": { "count": 1250, "average": 4.7 },
+      "views": 50000,
+      "favorites": 3200,
+      "chapters": 45,
       "wordCount": 180000,
-      "lastUpdated": "2024-01-15T08:00:00Z",
+      "updatedAt": "2024-01-15T08:00:00Z",
       "createdAt": "2023-06-01T00:00:00Z",
       "isCompleted": false,
-      "isPremium": false
     }
   ],
   "pagination": {
@@ -295,11 +292,6 @@ GET /novels?page=1&limit=20&genre=fantasy&status=ongoing&sortBy=popularity&sortO
     "hasNext": true,
     "hasPrev": false
   },
-  "filters": {
-    "availableGenres": ["fantasy", "romance", "sci-fi", "mystery"],
-    "availableLanguages": ["en", "es", "fr", "de"],
-    "availableStatuses": ["ongoing", "completed", "hiatus"]
-  }
 }
 \`\`\`
 
@@ -321,30 +313,30 @@ Get detailed information about a specific novel.
   "tags": ["dragons", "magic system", "coming of age", "female protagonist"],
   "status": "ongoing",
   "language": "en",
-  "rating": 4.7,
-  "ratingCount": 1250,
-  "viewCount": 50000,
-  "favoriteCount": 3200,
-  "chapterCount": 45,
+  "rating": {count: 1250, average: 4.7 },
+  "views": 50000,
+  "favorites": 3200,
+  "features": 3200,
+  "followers": 15000,
+  "chapters": 45,
   "wordCount": 180000,
-  "lastUpdated": "2024-01-15T08:00:00Z",
   "createdAt": "2023-06-01T00:00:00Z",
+  "updatedAt": "2023-06-01T00:00:00Z",
   "isCompleted": false,
-  "isPremium": false,
   "chapters": [
     {
       "number": 1,
       "title": "The Awakening",
       "wordCount": 4200,
       "publishedAt": "2023-06-01T00:00:00Z",
-      "isLocked": false
+      "isReaded": false
     },
     {
       "number": 2,
       "title": "First Steps",
       "wordCount": 3800,
       "publishedAt": "2023-06-03T00:00:00Z",
-      "isLocked": false
+      "isReaded": false
     }
   ],
   "author": {
@@ -355,13 +347,6 @@ Get detailed information about a specific novel.
     "novelCount": 3,
     "followerCount": 15000
   },
-  "userInteraction": {
-    "isFavorited": true,
-    "isFollowing": true,
-    "rating": 5,
-    "lastReadChapter": 12,
-    "readingProgress": 0.27
-  }
 }
 \`\`\`
 
