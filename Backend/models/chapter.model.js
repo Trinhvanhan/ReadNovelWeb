@@ -7,5 +7,5 @@ const chapterSchema = new mongoose.Schema({
   images:    [{ type: String }], // URLs to images
   createdAt: { type: Date, default: Date.now }
 });
-
+chapterSchema.index({ novel: 1, chapterNumber: 1 }, { unique: true });
 module.exports = mongoose.model('Chapter', chapterSchema);

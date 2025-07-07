@@ -11,24 +11,15 @@ const userSchema = new mongoose.Schema({
     fontSize: { type: String, default: 'medium' },
     autoBookmark: { type: Boolean, default: true },
     notifications: {
-      email: {
-        enabled: { type: Boolean, default: true },
-        newChapters: { type: Boolean, default: true },
-        recommendations: { type: Boolean, default: true },
-        systemUpdates: { type: Boolean, default: true },
-        frequency: { type: String, default: 'immediate' }
-      },
-      push: {
-        enabled: { type: Boolean, default: false },
-        newChapters: { type: Boolean, default: false },
-        recommendations: { type: Boolean, default: false },
-        systemUpdates: { type: Boolean, default: true }
-      },
-      inApp: {
-        enabled: { type: Boolean, default: true },
-        newChapters: { type: Boolean, default: true },
-        recommendations: { type: Boolean, default: true },
-        systemUpdates: { type: Boolean, default: true }
+      emailNotifications: { type: Boolean, default: true },
+      newChapters: { type: Boolean, default: true },
+      novelCompleted: { type: Boolean, default: true },
+      readingMilestones: { type: Boolean, default: true },
+      systemUpdates: { type: Boolean, default: true },
+      createdAt: { type: String, default: Date.now() },
+      updatedAt: {
+        type: String,
+        default: Date.now(),
       }
     }
   }

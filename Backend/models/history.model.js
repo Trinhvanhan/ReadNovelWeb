@@ -9,6 +9,6 @@ const historySchema = new mongoose.Schema({
   lastReadAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-historySchema.index({ user: 1, novel: 1 }, { unique: true });
+historySchema.index({ user: 1, novel: 1, chapterNumber: 1 }, { unique: true });
 
 export default mongoose.model('History', historySchema);

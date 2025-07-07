@@ -9,6 +9,6 @@ const bookmarkSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-bookmarkSchema.index({ user: 1, novel: 1, chapterNumber: 1 }, { unique: true });
+bookmarkSchema.index({ user: 1, novel: 1 }, { unique: true });
 
 export default mongoose.model('Bookmark', bookmarkSchema);

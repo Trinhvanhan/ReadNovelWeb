@@ -18,12 +18,17 @@ export function setSessionCookies(res, { token, refreshToken, user }) {
     path: '/',
   });
 
-  const sessionCookie = serialize('session', user, {
-    httpOnly: true,   
+  const sessionCookie = serialize('session', JSON.stringify({
+    user,
+    expiresAt: Date.now() + 60 * 60 * 1000 // nên để đơn vị là ms
+  }), {
+    httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60, // 1 hour
+    maxAge: 60 * 60, // 1 hour (giây)
+    path: '/',
   });
 
-  res.setHeader('Set-Cookie', [tokenCookie, refreshCookie]);
+
+  res.setHeader('Set-Cookie', [tokenCookie, refreshCookie, sessionCookie]);
 }

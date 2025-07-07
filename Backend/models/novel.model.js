@@ -1,18 +1,22 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const novelSchema = new mongoose.Schema({
-  title:       { type: String, required: true },
-  author:      { type: String },
-  genres:      [{ type: String }],
-  coverImage:  { type: String },
-  views:       { type: Number, default: 0 },
-  isNew:       { type: Boolean, default: false },
-  isFeatured:  { type: Boolean, default: false },
+  title: { type: String, required: true },
+  author: { type: String },
+  coverImage: { type: String },
+  genres: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Genre' }],
+  tags: [{ type: String }],
+  views: { type: Number, default: 0 },
+  favorites: { type: Number, default: 0 },
+  followers: { type: Number, default: 0 },
+  features: { type: Number, default: 0 },
   description: { type: String },
-  rating:      { type: Number, default: 0 },
-  chapters:    {type: Number, default: 0 },
-  status:      { type: String, enum: ['ongoing', 'completed'], default: 'ongoing' },
-  createdAt:   { type: Date, default: Date.now }
+  rating: { count: { type: Number, default: 0 }, average: { type: Number, default: 0 } },
+  chapters: {type: Number, default: 0 },
+  status: { type: String, enum: ['ongoing', 'completed', 'dropped'], default: 'ongoing' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
+novelSchema.index({ title: 1 });
 module.exports = mongoose.model('Novel', novelSchema);
