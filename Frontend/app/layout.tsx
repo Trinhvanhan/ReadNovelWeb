@@ -18,7 +18,7 @@ export default async function RootLayout({
   const user = await getCurrentUser()
 
   return (
-    <html lang="en">
+    <html lang="en" className="light" style={{ colorScheme: "light" }}>
       <body>
         <AppProviders initialUser={user}>{children}</AppProviders>
       </body>

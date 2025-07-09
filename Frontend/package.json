@@ -57,7 +57,7 @@
     "input-otp": "1.4.1",
     "joi": "latest",
     "jsonwebtoken": "latest",
-    "lodash": "latest",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.454.0",
     "morgan": "latest",
     "multer": "latest",
@@ -83,7 +83,8 @@
     "zod": "latest"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^22.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",

@@ -1,5 +1,4 @@
 import { requireAuth } from "@/lib/auth"
-import { getUserNotificationPreferences } from "@/lib/notifications"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BookOpen } from "lucide-react"
 import Link from "next/link"
@@ -7,7 +6,7 @@ import { NotificationSettings } from "@/components/settings/notification-setting
 
 export default async function SettingsPage() {
   const user = await requireAuth()
-  const preferences = await getUserNotificationPreferences(user.id)
+  const preferences = user.preferences.notifications
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,18 +138,18 @@ export default async function SettingsPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium">Default Font Size</label>
-                      <select className="w-full mt-1 p-2 border rounded-md">
-                        <option>Small</option>
-                        <option selected>Medium</option>
-                        <option>Large</option>
+                      <select className="w-full mt-1 p-2 border rounded-md" defaultValue={'medium'}>
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Default Theme</label>
                       <select className="w-full mt-1 p-2 border rounded-md">
-                        <option selected>Light</option>
-                        <option>Dark</option>
-                        <option>Sepia</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="Sepia">Sepia</option>
                       </select>
                     </div>
                     <div className="flex items-center justify-between">

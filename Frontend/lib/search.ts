@@ -10,20 +10,29 @@ export interface SearchFilters {
   sortOrder?: "asc" | "desc"
 }
 
+export interface SearchParams {
+  q?: string
+  genres?: string[]
+  tags?: string[]
+  status?: string
+  rating?: { min: number; max: number }
+  chapterCount?: { min: number; max: number }
+  sortBy?: "relevance" | "rating" | "popularity" | "newest" | "updated"
+  sortOrder?: "asc" | "desc"
+}
+
 export interface SearchResult {
   id: string
   title: string
   author: string
-  cover?: string
+  coverImage?: string
   rating: number
-  totalRatings: number
   chapters: number
   status: string
-  genre: string[]
+  genres: string[]
   tags: string[]
   description: string
   wordCount: string
-  language: string
   lastUpdated: string
   relevanceScore: number
 }

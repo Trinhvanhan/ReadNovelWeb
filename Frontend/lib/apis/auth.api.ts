@@ -3,7 +3,7 @@ import { axiosi } from "./config/axios.config";
 
 interface ApiResponse<T = any> {
   data: T;
-  status: string;
+  status: number;
   message?: string;
 }
 interface LoginBody {
@@ -19,12 +19,8 @@ interface SignupBody {
 
 export const login = async (formData: LoginBody): Promise<ApiResponse> => {
   try {
-    const res = await axiosi.post<ApiResponse>('/auth/login', formData, {
-      headers: {  
-        'Content-Type': 'application/json',
-      },  
-    });
-    return res.data;
+    const res = await axiosi.post('/auth/login', formData) as ApiResponse;
+    return res;
   } catch (error: any) {
     throw error.response?.data || { message: 
       'Failed to login, please check your credentials and try again.'
@@ -34,11 +30,7 @@ export const login = async (formData: LoginBody): Promise<ApiResponse> => {
 
 export const signup = async (formData: SignupBody): Promise<ApiResponse> => {
   try {
-    const res = await axiosi.post<ApiResponse>('/auth/signup', formData, {
-      headers: {  
-        'Content-Type': 'application/json',
-      },  
-    });
+    const res = await axiosi.post('/auth/signup', formData) as ApiResponse;
     return res.data;
   } catch (error: any) {
     throw error.response?.data || { message: 

@@ -50,7 +50,7 @@ export default function SignupPage() {
     }
     const result = await signup(validatedData.data)
     try {
-      if (result && result?.data?.user) {
+      if (result.data.user) {
         router.push("/library")
         router.refresh()
       } else {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,27 +14,27 @@ import { Search, Filter, X, Star, BookOpen, Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { SearchSuggestions } from "./search-suggestions"
-import { searchNovels, logSearchAnalytics } from "@/lib/search"
-import type { SearchFilters, SearchResult } from "@/lib/search"
+import { logSearchAnalytics } from "@/lib/search"
+import { getSearchResults } from "@/lib/apis/search.api"
+import type { SearchParams, SearchFilter } from "@/lib/apis/types/param.type"
+import type { SearchResult } from "@/lib/apis/types/data.type"
 import { debounce } from "lodash"
 
 interface SearchInterfaceProps {
-  initialFilters: SearchFilters
+  initialFilters: SearchFilter
   initialResults: SearchResult[]
   availableFilters: {
     genres: string[]
     tags: string[]
-    languages: string[]
     statuses: string[]
   }
 }
 
 export function SearchInterface({ initialFilters, initialResults, availableFilters }: SearchInterfaceProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const [query, setQuery] = useState(initialFilters.query || "")
-  const [filters, setFilters] = useState<SearchFilters>(initialFilters)
+  const [query, setQuery] = useState(initialFilters.q || "")
+  const [filters, setFilters] = useState<SearchFilter>(initialFilters)
   const [results, setResults] = useState<SearchResult[]>(initialResults)
   const [isLoading, setIsLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -42,39 +42,42 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
 
   // Debounced search function
   const debouncedSearch = useCallback(
-    debounce(async (searchFilters: SearchFilters) => {
+    debounce(async (searchFilters: SearchParams) => {
       setIsLoading(true)
       try {
-        const searchResults = await searchNovels(searchFilters)
-        setResults(searchResults)
+        const searchResults = await getSearchResults(searchFilters)
+        setResults(searchResults.data)
 
         // Log search analytics
-        await logSearchAnalytics({
-          query: searchFilters.query || "",
-          resultsCount: searchResults.length,
-          filters: searchFilters,
-        })
+        // await logSearchAnalytics({
+        //   query: searchFilters.q || "",
+        //   resultsCount: searchResults.data.length,
+        //   // filters: searchFilters,
+        // })
 
         // Update URL
         const params = new URLSearchParams()
-        if (searchFilters.query) params.set("q", searchFilters.query)
-        if (searchFilters.genres?.length) params.set("genres", searchFilters.genres.join(","))
-        if (searchFilters.tags?.length) params.set("tags", searchFilters.tags.join(","))
-        if (searchFilters.status?.length) params.set("status", searchFilters.status.join(","))
-        if (searchFilters.language?.length) params.set("language", searchFilters.language.join(","))
-        if (searchFilters.rating) {
-          params.set("rating_min", searchFilters.rating.min.toString())
-          params.set("rating_max", searchFilters.rating.max.toString())
-        }
-        if (searchFilters.wordCount) {
-          params.set("word_min", searchFilters.wordCount.min.toString())
-          params.set("word_max", searchFilters.wordCount.max.toString())
-        }
+        if (searchFilters.q) params.set("q", searchFilters.q)
         if (searchFilters.sortBy && searchFilters.sortBy !== "relevance") {
           params.set("sort", searchFilters.sortBy)
         }
         if (searchFilters.sortOrder && searchFilters.sortOrder !== "desc") {
           params.set("order", searchFilters.sortOrder)
+        }
+        if (searchFilters.genres?.length) params.set("genres", searchFilters.genres)
+        if (searchFilters.tags?.length) params.set("tags", searchFilters.tags)
+        if (searchFilters.status) params.set("status", searchFilters.status)
+        if (searchFilters.rating_min) {
+          params.set("rating_min", searchFilters.rating_min.toString())
+        }
+        if (searchFilters.rating_max) {
+          params.set("rating_max", searchFilters.rating_max.toString())
+        }
+        if (searchFilters.chapter_min) {
+          params.set("chapter_min", searchFilters.chapter_min.toString())
+        }
+        if (searchFilters.chapter_max) {
+          params.set("chapter_max", searchFilters.chapter_max.toString())
         }
 
         router.push(`/search?${params.toString()}`, { scroll: false })
@@ -89,7 +92,22 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
 
   // Handle search
   useEffect(() => {
-    debouncedSearch(filters)
+    const params: SearchParams = {
+      q: filters.q,
+      genres: filters.genres?.join(','),
+      status: filters.status,
+      rating_min: filters.rating?.[0],
+      rating_max: filters.rating?.[1],
+      chapter_min: filters.chapterCount?.[0],
+      chapter_max: filters.chapterCount?.[1],
+      tags: filters.tags?.join(','),
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+      page: filters.page,
+      limit: filters.limit
+
+    }
+    debouncedSearch(params)
   }, [filters, debouncedSearch])
 
   const handleQueryChange = (newQuery: string) => {
@@ -98,11 +116,11 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
     setShowSuggestions(newQuery.length > 0)
   }
 
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+  const handleFilterChange = (key: keyof SearchFilter, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
-  const clearFilter = (key: keyof SearchFilters) => {
+  const clearFilter = (key: keyof SearchFilter) => {
     setFilters((prev) => {
       const newFilters = { ...prev }
       delete newFilters[key]
@@ -112,14 +130,14 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
 
   const clearAllFilters = () => {
     setQuery("")
-    setFilters({ query: "" })
+    setFilters({ q: "" })
   }
 
   const activeFilterCount =
     Object.keys(filters).filter((key) => {
-      const value = filters[key as keyof SearchFilters]
+      const value = filters[key as keyof SearchFilter]
       return value && (Array.isArray(value) ? value.length > 0 : true)
-    }).length - (filters.query ? 1 : 0) // Don't count query as a filter
+    }).length - (filters.q ? 1 : 0) // Don't count query as a filter
 
   return (
     <div className="space-y-6">
@@ -205,7 +223,7 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
         {/* Active Filters */}
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap gap-2">
-            {filters.genres?.map((genre) => (
+            {filters.genres?.slice(0,2).map((genre) => (
               <Badge key={genre} variant="secondary" className="cursor-pointer">
                 {genre}
                 <X
@@ -233,20 +251,19 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                 />
               </Badge>
             ))}
-            {filters.status?.map((status) => (
-              <Badge key={status} variant="secondary" className="cursor-pointer">
-                {status}
-                <X
-                  className="h-3 w-3 ml-1"
-                  onClick={() =>
-                    handleFilterChange(
-                      "status",
-                      filters.status?.filter((s) => s !== status),
-                    )
-                  }
-                />
-              </Badge>
-            ))}
+            
+            <Badge variant="secondary" className="cursor-pointer">
+              {filters.status}
+              <X
+                className="h-3 w-3 ml-1"
+                onClick={() =>
+                  handleFilterChange(
+                    "status",
+                    filters.status,
+                  )
+                }
+              />
+            </Badge>
           </div>
         )}
       </div>
@@ -297,18 +314,10 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                     {availableFilters.statuses.map((status) => (
                       <label key={status} className="flex items-center space-x-2 cursor-pointer">
                         <input
-                          type="checkbox"
-                          checked={filters.status?.includes(status) || false}
+                          type="radio"
+                          checked={filters.status == status || false}
                           onChange={(e) => {
-                            const currentStatus = filters.status || []
-                            if (e.target.checked) {
-                              handleFilterChange("status", [...currentStatus, status])
-                            } else {
-                              handleFilterChange(
-                                "status",
-                                currentStatus.filter((s) => s !== status),
-                              )
-                            }
+                            handleFilterChange("status", status)
                           }}
                           className="rounded"
                         />
@@ -324,12 +333,9 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Minimum Rating</Label>
                   <Slider
-                    value={[filters.rating?.min || 0]}
+                    value={[filters.rating?.[0] || 0]}
                     onValueChange={([value]) =>
-                      handleFilterChange("rating", {
-                        min: value,
-                        max: filters.rating?.max || 5,
-                      })
+                      handleFilterChange("rating", [value, 5])
                     }
                     max={5}
                     min={0}
@@ -338,7 +344,7 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                   />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>0</span>
-                    <span>{filters.rating?.min?.toFixed(1) || "0.0"}+</span>
+                    <span>{filters.rating?.[0]?.toFixed(1) || "0.0"}+</span>
                     <span>5</span>
                   </div>
                 </div>
@@ -347,43 +353,43 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
 
                 {/* Word Count */}
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Word Count</Label>
+                  <Label className="text-sm font-medium mb-2 block">Chapter Count</Label>
                   <div className="space-y-2">
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="radio"
-                        name="wordCount"
-                        checked={!filters.wordCount}
-                        onChange={() => clearFilter("wordCount")}
+                        name="chapterCount"
+                        checked={!filters.chapterCount}
+                        onChange={() => clearFilter("chapterCount")}
                       />
                       <span className="text-sm">Any length</span>
                     </label>
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="radio"
-                        name="wordCount"
-                        checked={filters.wordCount?.min === 0 && filters.wordCount?.max === 100000}
-                        onChange={() => handleFilterChange("wordCount", { min: 0, max: 100000 })}
+                        name="chapterCount"
+                        checked={filters.chapterCount?.[0] === 0 && filters.chapterCount[1] === 100}
+                        onChange={() => handleFilterChange("chapterCount", [0, 100])}
                       />
-                      <span className="text-sm">Short (&lt; 100k words)</span>
+                      <span className="text-sm">Short (&lt; 100 chapters)</span>
                     </label>
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="radio"
-                        name="wordCount"
-                        checked={filters.wordCount?.min === 100000 && filters.wordCount?.max === 300000}
-                        onChange={() => handleFilterChange("wordCount", { min: 100000, max: 300000 })}
+                        name="chapterCount"
+                        checked={filters.chapterCount?.[0] === 100 && filters.chapterCount[1] === 300}
+                        onChange={() => handleFilterChange("chapterCount", [100, 300])}
                       />
-                      <span className="text-sm">Medium (100k - 300k words)</span>
+                      <span className="text-sm">Medium (100 - 300 chapters)</span>
                     </label>
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="radio"
-                        name="wordCount"
-                        checked={filters.wordCount?.min === 300000}
-                        onChange={() => handleFilterChange("wordCount", { min: 300000, max: 1000000 })}
+                        name="chapterCount"
+                        checked={filters.chapterCount?.[0] === 300}
+                        onChange={() => handleFilterChange("chapterCount", [300, 10000])}
                       />
-                      <span className="text-sm">Long (&gt; 300k words)</span>
+                      <span className="text-sm">Long (&gt; 300 chapters)</span>
                     </label>
                   </div>
                 </div>
@@ -424,7 +430,7 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                 <Card key={novel.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative">
                     <Image
-                      src={novel.cover || "/placeholder.svg"}
+                      src={novel.coverImage || "/placeholder.svg"}
                       alt={novel.title}
                       width={200}
                       height={300}
@@ -440,16 +446,16 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                       </div>
                       <div className="flex items-center space-x-1 text-sm">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span>{novel.rating}</span>
+                        <span>{novel.rating.average.toFixed(1)}</span>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{novel.description}</p>
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {novel.genre.slice(0, 2).map((genre) => (
-                        <Badge key={genre} variant="secondary" className="text-xs">
-                          {genre}
+                      {novel.genres.map((genre) => (
+                        <Badge key={genre.name} variant="secondary" className="text-xs">
+                          {genre.name}
                         </Badge>
                       ))}
                     </div>
@@ -457,7 +463,7 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                       <span>{novel.chapters} chapters</span>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-3 w-3" />
-                        <span>{new Date(novel.lastUpdated).toLocaleDateString()}</span>
+                        <span>{new Date(novel.updatedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                     <Link href={`/novel/${novel.id}`}>

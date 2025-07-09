@@ -9,7 +9,6 @@ class NovelController {
         limit = 20,
         genre,
         status,
-        language,
         sortBy = 'createdAt',
         sortOrder = 'desc'
       } = req.query;
@@ -17,11 +16,13 @@ class NovelController {
       const query = {};
       if (genre) query.genres = genre;
       if (status) query.status = status;
-      if (language) query.language = language;
 
       const totalCount = await Novel.countDocuments(query);
       const totalPages = Math.ceil(totalCount / limit);
-      const novels = await Novel.find(query)
+      const novels = await Novel.find(query).populate({
+          path: 'genres',              
+          select: 'name -_id'     
+        })
         .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
         .skip((page - 1) * limit)
         .limit(Math.min(limit, 100))
@@ -36,11 +37,6 @@ class NovelController {
           hasNext: page < totalPages,
           hasPrev: page > 1
         },
-        filters: {
-          availableGenres: ['fantasy', 'romance', 'sci-fi', 'mystery'],
-          availableLanguages: ['en', 'es', 'fr', 'de'],
-          availableStatuses: ['ongoing', 'completed', 'hiatus']
-        }
       });
     } catch (err) {
       res.status(500).json({ message: err.message });

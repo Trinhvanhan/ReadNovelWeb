@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle } from "lucide-react"
 import { updateUserNotificationPreferences } from "@/app/actions/notifications"
-import type { NotificationPreferences } from "@/lib/notifications"
+import type { NotificationPreferences } from "@/lib/apis/types/data.type"
 
 interface NotificationSettingsProps {
   preferences: NotificationPreferences

@@ -6,51 +6,19 @@ import Image from "next/image"
 import Link from "next/link"
 import { UserMenu } from "@/components/user-menu"
 import { SearchBar } from "@/components/search/search-bar"
+import { getNovels } from "@/lib/apis/novel.api"
+import { NovelInfo } from "@/lib/apis/types/data.type"
 
-const featuredNovels = [
-  {
-    id: 1,
-    title: "The Midnight Chronicles",
-    author: "Sarah Chen",
-    cover: "/placeholder.svg?height=300&width=200",
-    rating: 4.8,
-    chapters: 45,
-    genre: "Fantasy",
-    description: "A thrilling tale of magic and adventure in a world where darkness threatens to consume everything.",
-    isNew: true,
-  },
-  {
-    id: 2,
-    title: "Digital Hearts",
-    author: "Alex Rivera",
-    cover: "/placeholder.svg?height=300&width=200",
-    rating: 4.6,
-    chapters: 32,
-    genre: "Sci-Fi Romance",
-    description: "Love blooms in the digital age as two programmers navigate virtual reality and real emotions.",
-    isNew: false,
-  },
-  {
-    id: 3,
-    title: "The Last Library",
-    author: "Emma Thompson",
-    cover: "/placeholder.svg?height=300&width=200",
-    rating: 4.9,
-    chapters: 28,
-    genre: "Dystopian",
-    description: "In a world where books are forbidden, one librarian fights to preserve human knowledge.",
-    isNew: true,
-  },
-]
 
-const trendingNovels = [
-  { id: 4, title: "Quantum Dreams", author: "Dr. Michael Park", rating: 4.7, chapters: 56 },
-  { id: 5, title: "The Phoenix Rebellion", author: "Lisa Wang", rating: 4.5, chapters: 41 },
-  { id: 6, title: "Echoes of Tomorrow", author: "James Mitchell", rating: 4.8, chapters: 33 },
-  { id: 7, title: "The Memory Thief", author: "Anna Rodriguez", rating: 4.6, chapters: 29 },
-]
+export default async function HomePage() {
 
-export default function HomePage() {
+    // This is a placeholder for any client-side effects you might want to run
+    // For example, you could fetch user data or initialize analytics
+  const result = (await getNovels()).data.novels as NovelInfo[]
+  const featuredNovels = result.filter(novel => novel.features > -1)
+  const trendingNovels = result.filter(novel => novel.followers > -1)
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -106,46 +74,52 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {featuredNovels.map((novel) => (
-              <Card key={novel.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <Image
-                    src={novel.cover || "/placeholder.svg"}
-                    alt={novel.title}
-                    width={200}
-                    height={300}
-                    className="w-full h-64 object-cover"
-                  />
-                  {novel.isNew && <Badge className="absolute top-2 right-2">New</Badge>}
-                </div>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="line-clamp-1">{novel.title}</CardTitle>
-                      <CardDescription>by {novel.author}</CardDescription>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span>{novel.rating}</span>
-                    </div>
+              <Link key={novel._id} href={`/novel/${novel._id}`}>
+                <Card  className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative">
+                    <Image
+                      src={novel.coverImage || "/placeholder.svg"}
+                      alt={novel.title}
+                      width={200}
+                      height={300}
+                      className="w-full h-64 object-cover"
+                    />
+                    {novel.createdAt && <Badge className="absolute top-2 right-2">New</Badge>}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{novel.description}</p>
-                  <div className="flex items-center justify-between mb-4">
-                    <Badge variant="secondary">{novel.genre}</Badge>
-                    <span className="text-sm text-muted-foreground">{novel.chapters} chapters</span>
-                  </div>
-                  <Link href={`/novel/${novel.id}`}>
-                    <Button className="w-full">Read Now</Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="line-clamp-1">{novel.title}</CardTitle>
+                        <CardDescription>by {novel.author}</CardDescription>
+                      </div>
+                      <div className="flex items-center space-x-1 text-sm">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span>{novel.rating.average.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{novel.description}</p>
+                    <div className="flex items-center justify-between mb-4 ">
+                      <div className="flex flex-wrap gap-2 w-[70%] overflow-hidden">
+                        {novel.genres.slice(0,2).map(genre => (
+                          <Badge key={genre.name} variant="secondary">{genre.name}</Badge>
+                        ))}
+                      </div>
+                      
+                      <span className="text-sm text-muted-foreground">{novel.chapters} chapters</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
       </section>
+
+      {/* <FeaturedNovelsClient initialData={featuredNovels} /> */}
 
       {/* Trending Section */}
       <section className="py-16 bg-muted/50">
@@ -157,7 +131,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {trendingNovels.map((novel, index) => (
-              <Card key={novel.id} className="hover:shadow-md transition-shadow">
+              <Card key={novel._id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
@@ -170,7 +144,7 @@ export default function HomePage() {
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span>{novel.rating}</span>
+                        <span>{novel.rating.average.toFixed(1)}</span>
                       </div>
                       <span>{novel.chapters} ch</span>
                     </div>

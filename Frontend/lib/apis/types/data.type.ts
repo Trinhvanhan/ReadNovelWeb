@@ -1,10 +1,10 @@
 export interface NovelInfo {
-  id: string;
+  _id: string;
   title: string;
   author: string;
   description: string;
   coverImage: string;
-  genres: string[];
+  genres: { name: string }[];
   tags: string[];
   status: "ongoing" | "completed" | string; // có thể thêm enum cụ thể
   rating: {
@@ -14,10 +14,11 @@ export interface NovelInfo {
   views: number;
   favorites: number;
   chapters: number;
+  features: number;
+  followers: number;
   wordCount: number;
   updatedAt: string;  // ISO date string
   createdAt: string;  // ISO date string
-  isCompleted: boolean;
 }
 
 export interface Bookmark {
@@ -90,7 +91,58 @@ export interface Novel {
   wordCount: number;
   createdAt: string;
   updatedAt: string;
-  isCompleted: boolean;
   chapters: ChapterInfo[];
   author: Author;
+}
+
+export interface NotificationPreferences {
+  userId: string
+  emailNotifications: boolean
+  newChapters: boolean
+  novelCompleted: boolean
+  readingMilestones: boolean
+  systemUpdates: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserPreferences {
+  theme: string;
+  fontSize: string;
+  autoBookmark: boolean;
+  notifications: NotificationPreferences;
+}
+
+export interface User {
+  id: string; // optional if not saved yet
+  name: string;
+  email: string;
+  password: string;
+  avatar?: string;
+  role: 'user' | 'admin';
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  genres: { name: string}[];
+  tags: string[];
+  status: "ongoing" | "completed" | string;
+  language: string;
+  rating: Rating;
+  views: number;
+  favorites: number;
+  features: number;
+  followers: number;
+  chapters: number;
+  wordCount: number;
+  createdAt: string;
+  updatedAt: string;
+  author: string;
+  relevanceScore: number;
 }

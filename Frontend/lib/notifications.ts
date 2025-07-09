@@ -1,16 +1,8 @@
 import { emailService, emailTemplates } from "./email"
-import type { User } from "./auth"
+import type { User } from "./apis/types/data.type"
+import { NotificationPreferences } from "./apis/types/data.type"
 
-export interface NotificationPreferences {
-  userId: string
-  emailNotifications: boolean
-  newChapters: boolean
-  novelCompleted: boolean
-  readingMilestones: boolean
-  systemUpdates: boolean
-  createdAt: string
-  updatedAt: string
-}
+
 
 // Mock notification preferences storage
 const notificationPreferences: NotificationPreferences[] = [

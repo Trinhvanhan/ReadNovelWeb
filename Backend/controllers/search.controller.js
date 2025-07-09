@@ -1,4 +1,5 @@
 import Novel from '../models/novel.model.js';
+import Genre from '../models/genre.model.js';
 
 class SearchController {
   // GET /search
@@ -7,9 +8,10 @@ class SearchController {
       q,
       genres,
       status,
-      rating,
-      wordCount,
-      language,
+      rating_min,
+      rating_max,
+      chapter_min,
+      chapter_max,
       tags,
       sortBy = 'relevance',
       sortOrder = 'desc',
@@ -28,26 +30,30 @@ class SearchController {
       ];
     }
 
-    if (genres) filter.genres = { $in: genres.split(',') };
+    let genreIds = [];
+    if (genres) {
+      const genreNames = genres.split(',');
+      const matchedGenres = await Genre.find({ name: { $in: genreNames } });
+      genreIds = matchedGenres.map(g => g._id);
+      filter.genres = { $in: genreIds };
+    }
+
     if (status) filter.status = { $in: status.split(',') };
-    if (language) filter.language = { $in: language.split(',') };
     if (tags) filter.tags = { $in: tags.split(',') };
 
-    if (rating) {
-      const [min, max] = rating.split(',').map(Number);
-      filter.rating = { $gte: min, $lte: max };
-    }
+    filter['rating.average'] = { $gte: rating_min ?? 0, $lte: rating_max ?? 5};
 
-    if (wordCount) {
-      const [min, max] = wordCount.split(',').map(Number);
-      filter.wordCount = { $gte: min, $lte: max };
-    }
+    filter.chapters = {
+      $gte: chapter_min ?? 0,
+      $lte: chapter_max ?? Infinity,
+    };
 
     const sortOptions = {
       rating: 'rating',
-      popularity: 'viewCount',
+      popularity: 'views',
+      featured: 'features',
       newest: 'createdAt',
-      updated: 'lastUpdated'
+      updated: 'updatedAt'
     };
 
     const sortField = sortOptions[sortBy] || null;
@@ -57,6 +63,10 @@ class SearchController {
     const totalPages = Math.ceil(totalCount / limit);
 
     const novels = await Novel.find(filter)
+      .populate({
+          path: 'genres',              
+          select: 'name -_id'     
+        })
       .sort(sortObj)
       .skip((page - 1) * limit)
       .limit(Number(limit))
@@ -69,13 +79,17 @@ class SearchController {
       description: novel.description,
       coverImage: novel.coverImage,
       genres: novel.genres,
-      rating: novel.rating || 4.5,
-      ratingCount: novel.ratingCount || 1000,
-      chapterCount: novel.chapterCount || 40,
+      views: novel.views,
+      features: novel.features,
+      followers: novel.followers,
+      favorites: novel.favorites,
+      rating: novel.rating || { count: 0, average: 0},
+      chapters: novel.chapters || 0,
       status: novel.status,
       relevanceScore: Math.random().toFixed(2), // placeholder
       matchedTerms: q ? q.split(' ') : [],
-      excerpt: novel.description?.slice(0, 100) + '...'
+      excerpt: novel.description?.slice(0, 100) + '...',
+      updatedAt: novel.updatedAt
     }));
 
     const genresFacet = await Novel.aggregate([
@@ -90,7 +104,7 @@ class SearchController {
     const executionTime = Math.random() * 0.1;
 
     res.status(200).json({
-      results,
+      data: results,
       pagination: {
         currentPage: +page,
         totalPages,
@@ -104,7 +118,8 @@ class SearchController {
         appliedFilters: {
           genres: genres?.split(',') || [],
           status: status?.split(',') || [],
-          rating: rating ? rating.split(',').map(Number) : []
+          rating_min: rating_min || 0,
+          rating_max: rating_max || 5
         },
         suggestions: q
           ? [`${q} system`, `${q} academy`, `${q} world`]

@@ -1,13 +1,8 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import type { User } from "@/lib/apis/types/data.type"
 
-export interface User {
-  id: string
-  email: string
-  name: string
-  avatar?: string
-  createdAt: string
-}
+
 
 export interface ReadingProgress {
   userId: string
@@ -20,14 +15,6 @@ export interface ReadingProgress {
 }
 
 // Mock database - in a real app, this would be a proper database
-const users: User[] = [
-  {
-    id: "1",
-    email: "demo@example.com",
-    name: "Demo User",
-    createdAt: new Date().toISOString(),
-  },
-]
 
 const readingProgress: ReadingProgress[] = [
   {
@@ -50,23 +37,6 @@ const readingProgress: ReadingProgress[] = [
   },
 ]
 
-export async function createUser(email: string, password: string, name: string): Promise<User> {
-  // In a real app, you'd hash the password and store it securely
-  const user: User = {
-    id: (users.length + 1).toString(),
-    email,
-    name,
-    createdAt: new Date().toISOString(),
-  }
-  users.push(user)
-  return user
-}
-
-export async function validateUser(email: string, password: string): Promise<User | null> {
-  // In a real app, you'd verify the hashed password
-  const user = users.find((u) => u.email === email)
-  return user || null
-}
 
 export async function createSession(userId: string) {
   const session = {
@@ -83,7 +53,7 @@ export async function createSession(userId: string) {
   })
 }
 
-export async function getSession(): Promise<{ userId: string } | null> {
+export async function getSession(): Promise<{ user: User } | null> {
   const cookieStore = await cookies()
   const sessionCookie = cookieStore.get("session")
 
@@ -94,7 +64,7 @@ export async function getSession(): Promise<{ userId: string } | null> {
     if (new Date(session.expiresAt) < new Date()) {
       return null
     }
-    return { userId: session.userId }
+    return { user: session.user }
   } catch {
     return null
   }
@@ -104,8 +74,7 @@ export async function getCurrentUser(): Promise<User | null> {
   const session = await getSession()
   if (!session) return null
 
-  const user = users.find((u) => u.id === session.userId)
-  return user || null
+  return session.user
 }
 
 export async function deleteSession() {

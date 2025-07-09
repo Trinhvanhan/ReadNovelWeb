@@ -1,52 +1,53 @@
-import { searchNovels, getAvailableFilters } from "@/lib/search"
+import { getAvailableFilters } from "@/lib/search"
 import { SearchInterface } from "@/components/search/search-interface"
 import { BookOpen } from "lucide-react"
 import Link from "next/link"
 import { UserMenu } from "@/components/user-menu"
+import { getSearchResults } from "@/lib/apis/search.api"
+import type { SearchParams, SearchFilter } from "@/lib/apis/types/param.type"
+
 
 interface SearchPageProps {
-  searchParams: {
-    q?: string
-    genres?: string
-    tags?: string
-    status?: string
-    language?: string
-    rating_min?: string
-    rating_max?: string
-    word_min?: string
-    word_max?: string
-    sort?: string
-    order?: string
-  }
+  searchParams: SearchParams
 }
 
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const filters = {
-    query: searchParams.q,
-    genres: searchParams.genres ? searchParams.genres.split(",") : undefined,
-    tags: searchParams.tags ? searchParams.tags.split(",") : undefined,
-    status: searchParams.status ? searchParams.status.split(",") : undefined,
-    language: searchParams.language ? searchParams.language.split(",") : undefined,
-    rating:
-      searchParams.rating_min || searchParams.rating_max
-        ? {
-            min: searchParams.rating_min ? Number.parseFloat(searchParams.rating_min) : 0,
-            max: searchParams.rating_max ? Number.parseFloat(searchParams.rating_max) : 5,
-          }
-        : undefined,
-    wordCount:
-      searchParams.word_min || searchParams.word_max
-        ? {
-            min: searchParams.word_min ? Number.parseInt(searchParams.word_min) : 0,
-            max: searchParams.word_max ? Number.parseInt(searchParams.word_max) : 1000000,
-          }
-        : undefined,
-    sortBy: (searchParams.sort as any) || "relevance",
-    sortOrder: (searchParams.order as any) || "desc",
-  }
-
-  const [results, availableFilters] = await Promise.all([searchNovels(filters), getAvailableFilters()])
-
+  const { q, genres, status, rating_min, rating_max, chapter_min, chapter_max, tags, sortBy, sortOrder, page, limit} = await searchParams
+  // const params = {
+  //   q: q,
+  //   genres: genres?.join(','),
+  //   status: status,
+  //   rating_min: rating?.[0],
+  //   rating_max: rating?.[0],
+  //   chapter_min: chapterCount?.[0],
+  //   chapter_max: chapterCount?.[1],
+  //   tags: tags?.join(','),
+  //   sortBy: (sortBy as any) || "relevance",
+  //   sortOrder: (sortOrder as any) || "desc",
+  //   page: page,
+  //   limit: limit
+  // }
+  const searchFilter: SearchFilter = {
+    q,
+    genres: typeof genres === 'string' ? genres.split(',') : [],
+    status: typeof status === 'string' ? status : undefined,
+    rating: [
+      rating_min != null ? Number(rating_min) : 0,
+      rating_max != null ? Number(rating_max) : 5
+    ],
+    chapterCount: [
+      chapter_min != null ? Number(chapter_min) : 0,
+      chapter_max != null ? Number(chapter_max) : Infinity
+    ],
+    tags: typeof tags === 'string' ? tags.split(',') : [],
+    sortBy: sortBy || 'relevance',
+    sortOrder: sortOrder || 'desc',
+    page: Number(page) || 1,
+    limit: Number(limit) || 20
+  };
+  const [results, availableFilters] = await Promise.all([getSearchResults(searchParams), getAvailableFilters()])
+  if(!results.data) results.data = []
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -69,7 +70,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <SearchInterface initialFilters={filters} initialResults={results} availableFilters={availableFilters} />
+        <SearchInterface initialFilters={searchFilter} initialResults={results.data} availableFilters={availableFilters} />
       </div>
     </div>
   )

@@ -42,8 +42,7 @@ export default function LoginPage() {
     }
     try {
       const result = await login(rawData)
-
-      if (result && result.data && result.data.user) {
+      if (result.status == 200) {
         router.push("/library")
         router.refresh()
       } else {

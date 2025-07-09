@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
 import ApiRouter from './routes/index.js';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -13,12 +14,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL ,
+  credentials: true,    
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-  origin: process.env.CLIENT_URL , // Hoặc dùng biến môi trường
-  credentials: true,               // Cho phép gửi cookie/session nếu cần
-}));
+
 app.use(morgan('dev'));
 app.use(helmet());
 
