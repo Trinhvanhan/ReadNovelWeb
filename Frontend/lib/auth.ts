@@ -77,9 +77,11 @@ export async function getCurrentUser(): Promise<User | null> {
   return session.user
 }
 
-export async function deleteSession() {
+export async function deleteCookies() {
   const cookieStore = await cookies()
   cookieStore.delete("session")
+  cookieStore.delete("token")
+  cookieStore.delete("refreshToken")
 }
 
 export async function requireAuth() {

@@ -14,8 +14,6 @@ const novelSchema = new mongoose.Schema({
   rating: { count: { type: Number, default: 0 }, average: { type: Number, default: 0 } },
   chapters: {type: Number, default: 0 },
   status: { type: String, enum: ['ongoing', 'completed', 'dropped'], default: 'ongoing' },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
 });
 
 novelSchema.index({ title: 1 });

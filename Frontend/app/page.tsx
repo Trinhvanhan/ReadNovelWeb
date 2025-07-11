@@ -31,7 +31,7 @@ export default async function HomePage() {
             </Link>
 
             <div className="flex items-center space-x-4">
-              <SearchBar className="hidden md:block w-64" placeholder="Search novels, authors..." />
+              <SearchBar className="hidden md:block" placeholder="Search novels, authors..." />
               <Link href="/library">
                 <Button variant="ghost">My Library</Button>
               </Link>

@@ -223,7 +223,7 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
         {/* Active Filters */}
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap gap-2">
-            {filters.genres?.slice(0,2).map((genre) => (
+            {filters.genres?.map((genre) => (
               <Badge key={genre} variant="secondary" className="cursor-pointer">
                 {genre}
                 <X
@@ -442,7 +442,7 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="line-clamp-1">{novel.title}</CardTitle>
-                        <CardDescription>by {novel.author}</CardDescription>
+                        <CardDescription className="line-champ-1">by {novel.author}</CardDescription>
                       </div>
                       <div className="flex items-center space-x-1 text-sm">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -451,9 +451,9 @@ export function SearchInterface({ initialFilters, initialResults, availableFilte
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{novel.description}</p>
+                    <p className="text-sm text-justify text-muted-foreground mb-4 line-clamp-2">{novel.description}</p>
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {novel.genres.map((genre) => (
+                      {novel.genres.slice(0,2).map((genre) => (
                         <Badge key={genre.name} variant="secondary" className="text-xs">
                           {genre.name}
                         </Badge>

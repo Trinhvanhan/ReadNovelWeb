@@ -2,13 +2,13 @@ import { axiosi } from "./config/axios.config";
 import { ApiResponse } from "./types/api.type";
 import { NovelInfo, Novel, Chapter, ChapterInfo } from "./types/data.type";
 
-export const getNovelChapterByNumber = async (id: string, chapterNumber: number): Promise<ApiResponse<Chapter>> => {
+export const getNovelChapterByNumber = async (id: string, chapterNumber: number): Promise<ApiResponse> => {
   try {
     const res = await axiosi.get(`/novels/${id}/chapters/${chapterNumber}`, {
       headers: {
         'Content-Type': 'application/json',
       },
-    }) as ApiResponse<Chapter>;
+    }) as ApiResponse;
     return res;
   } catch (error: any) {
     throw error.response?.data || { message: 'Failed to fetch novel chapter' };

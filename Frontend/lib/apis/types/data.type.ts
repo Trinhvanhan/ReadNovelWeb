@@ -38,12 +38,11 @@ export interface ChapterInfo {
 }
 
 export interface Chapter {
+    navigation: any;
     number: number;
     title: string;
     content: string;
-    wordCount: number;
     publishedAt: string; 
-    isLocked?: boolean;
 }
 
 export interface Genre {
@@ -93,6 +92,14 @@ export interface Novel {
   updatedAt: string;
   chapters: ChapterInfo[];
   author: Author;
+  userInteraction: {
+    isFollowing: boolean;
+    isFavorited: boolean;
+    isFeatured: boolean;
+    rating?: number;
+    lastReadChapter?: number;
+    readingProgress?: number
+  }
 }
 
 export interface NotificationPreferences {
@@ -145,4 +152,10 @@ export interface SearchResult {
   updatedAt: string;
   author: string;
   relevanceScore: number;
+}
+
+export interface ToggleInteractionBody {
+  targetId: string;
+  targetType: string;
+  type: 'follow' | 'favorite' | 'feature' | 'view';
 }

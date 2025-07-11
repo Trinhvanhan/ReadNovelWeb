@@ -1,6 +1,7 @@
 import Novel from '../models/novel.model.js';
 import Chapter from '../models/chapter.model.js';
-
+import ChapterContent from '../models/chapterContent.model.js'
+import Interaction from '../models/interaction.model.js'
 class NovelController {
   getNovels = async (req, res) => {
     try {
@@ -42,43 +43,67 @@ class NovelController {
       res.status(500).json({ message: err.message });
     }
   };
+  //DONE
 
   getNovelById = async (req, res) => {
     try {
-      const { id } = req.params;
-      const novel = await Novel.findById(id).lean();
+      const { id } = req.params
+      const novel = await Novel.findById(id).populate({ path: 'genres', select: 'name -_id'}).lean();
       if (!novel) return res.status(404).json({ message: 'Novel not found' });
 
-      const chapters = await Chapter.find({ novel: id })
+      const chapters = await Chapter.find({ novelId: id })
         .sort({ chapterNumber: 1 })
         .select('chapterNumber title createdAt')
         .lean();
+      let userInteraction = {
+        isFavorited: false,
+        isFollowing: false,
+        isFeatured: false,
+        rating: null,
+        lastReadChapter: null,
+        readingProgress: null,
+      };
+      if (req.user) {
+        const interactions = await Interaction.find({
+          user: req.user.id,
+          targetId: id,
+          targetType: 'Novel',
+        }).lean();
 
+        // Duyệt interaction và cập nhật trạng thái tương ứng
+        interactions.forEach((interaction) => {
+          switch (interaction.type) {
+            case 'favorite':
+              userInteraction.isFavorited = true;
+              break;
+            case 'follow':
+              userInteraction.isFollowing = true;
+              break;
+            case 'feature':
+              userInteraction.isFeatured = true;
+              break;
+            case 'rating':
+              userInteraction.rating = interaction.value ?? null;
+              break;
+            case 'progress':
+              userInteraction.readingProgress = interaction.progress ?? null;
+              userInteraction.lastReadChapter = interaction.lastReadChapter ?? null;
+              break;
+          }
+        });
+      }
       res.status(200).json({
         ...novel,
         id: novel._id,
         chapters: chapters.map(ch => ({
           number: ch.chapterNumber,
           title: ch.title,
-          wordCount: 3000, // mock
           publishedAt: ch.createdAt,
-          isLocked: false
         })),
         author: {
-          id: 'author_456',
-          name: novel.author,
-          avatar: 'https://example.com/authors/default.jpg',
-          bio: 'Fantasy author with 10+ years of experience...',
-          novelCount: 3,
-          followerCount: 15000
+          name: novel.author
         },
-        userInteraction: {
-          isFavorited: true,
-          isFollowing: true,
-          rating: 5,
-          lastReadChapter: 12,
-          readingProgress: 0.27
-        }
+        userInteraction
       });
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -91,25 +116,24 @@ class NovelController {
       const novel = await Novel.findById(id).lean();
       if (!novel) return res.status(404).json({ message: 'Novel not found' });
 
-      const ch = await Chapter.findOne({ novel: id, chapterNumber: chapter }).lean();
+      const ch = await Chapter.findOne({ novelId: id, chapterNumber: chapter }).lean();
       if (!ch) return res.status(404).json({ message: 'Chapter not found' });
-
-      const prev = await Chapter.findOne({ novel: id, chapterNumber: chapter - 1 }).select('chapterNumber title').lean();
-      const next = await Chapter.findOne({ novel: id, chapterNumber: chapter + 1 }).select('chapterNumber title').lean();
-
+      const content = await ChapterContent.findOne({ chapterId: ch._id },{ content: 1, _id: 0 }).lean();
+      
+      const prev = await Chapter.findOne({ novelId: id, chapterNumber: ch.chapterNumber - 1 }).select('chapterNumber title').lean();
+      const next = await Chapter.findOne({ novelId: id, chapterNumber: ch.chapterNumber + 1 }).select('chapterNumber title').lean();
       res.status(200).json({
         id: ch._id,
         novelId: id,
         number: ch.chapterNumber,
         title: ch.title,
-        content: 'This is the mock content of the chapter...',
-        wordCount: 3000,
+        content: content.content,
         publishedAt: ch.createdAt,
         updatedAt: ch.updatedAt || ch.createdAt,
-        isLocked: false,
         navigation: {
-          previousChapter: prev ? { number: prev.chapterNumber, title: prev.title, isLocked: false } : null,
-          nextChapter: next ? { number: next.chapterNumber, title: next.title, isLocked: false } : null
+          totalChapters: novel.chapters,
+          previousChapter: prev ? { number: prev.chapterNumber, title: prev.title } : null,
+          nextChapter: next ? { number: next.chapterNumber, title: next.title } : null
         },
         novel: {
           id: novel._id,
@@ -122,6 +146,8 @@ class NovelController {
       res.status(500).json({ message: err.message });
     }
   };
+
+
 }
 
 export default new NovelController();

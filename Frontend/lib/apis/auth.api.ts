@@ -1,11 +1,6 @@
 
 import { axiosi } from "./config/axios.config";
-
-interface ApiResponse<T = any> {
-  data: T;
-  status: number;
-  message?: string;
-}
+import { ApiResponse } from "./types/api.type";
 interface LoginBody {
   email: string;
   password: string;

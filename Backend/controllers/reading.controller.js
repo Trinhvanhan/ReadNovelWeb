@@ -20,7 +20,7 @@ class ReadingController {
           title: novel.title,
           author: novel.author,
           coverImage: novel.coverImage,
-          chapterCount: 45 // You can use Chapter.countDocuments later
+          chapterCount: Chapter.countDocuments({ novelId: novel._id }) // You can use Chapter.countDocuments later
         },
         currentChapter: h.chapterNumber,
         currentPosition: h.position,

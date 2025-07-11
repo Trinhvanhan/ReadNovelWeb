@@ -25,7 +25,7 @@ class SearchController {
     if (q) {
       filter.$or = [
         { title: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
+        { tags: { $regex: q, $options: 'i' } },
         { author: { $regex: q, $options: 'i' } }
       ];
     }
@@ -131,6 +131,7 @@ class SearchController {
       }
     });
   }
+  //DONE
 
   // GET /search/suggestions
   async suggestions(req, res) {

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Genre from '../models/genre.model.js';
 import Novel from '../models/novel.model.js';
 import Chapter from '../models/chapter.model.js';
+import ChapterContent from '../models/chapterContent.model.js';
 import { faker } from '@faker-js/faker';
 
 const MONGODB_URI = 'mongodb://localhost:27017/novelWeb';
@@ -63,18 +64,28 @@ export default async function novelSeed() {
       return Array.from({ length: chapterCount }).map((_, idx) => {
         return Chapter.create({
           novelId: novel._id,
-          title: `Chapter ${idx + 1}: ${faker.lorem.words(4)}`,
+          title: `${faker.lorem.words(4)}`,
           chapterNumber: idx + 1,
           createdAt: new Date(),
           updatedAt: new Date(),
-          publishedAt: new Date(),
+          // publishedAt: new Date(),
           wordCount: faker.number.int({ min: 800, max: 2500 }),
-          content: faker.lorem.paragraphs(3),
         });
       });
     });
 
-    await Promise.all(chapterPromises);
+    const chapters = await Promise.all(chapterPromises);
+
+
+    const chapterContentPromises = chapters.flatMap(chapter => {
+      return ChapterContent.create({
+        chapterId: chapter._id,
+        content: `${faker.lorem.words(300)}`
+      })
+    })
+
+    await Promise.all(chapterContentPromises);
+
 
     console.log('Seeded genres, novels, and chapters successfully!');
     mongoose.disconnect();

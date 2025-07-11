@@ -6,7 +6,6 @@ const bookmarkSchema = new mongoose.Schema({
   chapterNumber: { type: Number, required: true },
   position: { type: Number, default: 0 },
   note: { type: String },
-  createdAt: { type: Date, default: Date.now }
 });
 
 bookmarkSchema.index({ user: 1, novel: 1 }, { unique: true });

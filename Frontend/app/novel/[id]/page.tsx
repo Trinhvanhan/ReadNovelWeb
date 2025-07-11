@@ -1,43 +1,20 @@
 import { Button } from "@/components/ui/button"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { BookOpen, Star, Bookmark, Share, Play } from "lucide-react"
+import { BookOpen, Star, Bookmark, Play, Heart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { SearchBar } from "@/components/search/search-bar"
+import { InteractiveButton } from "@/components/novel/interactive-button"
+import type { Novel } from "@/lib/apis/types/data.type"
+import { getNovelById } from "@/lib/apis/novel.api"
+import { notFound } from "next/navigation"
+import ChapterList from "@/components/novel/chapter-list"
 
 // Mock data - in a real app, this would come from an API
-const novel = {
-  id: 1,
-  title: "The Midnight Chronicles",
-  author: "Sarah Chen",
-  cover: "/placeholder.svg?height=400&width=300",
-  rating: 4.8,
-  totalRatings: 2847,
-  chapters: 45,
-  status: "Ongoing",
-  genre: ["Fantasy", "Adventure", "Magic"],
-  tags: ["Strong Female Lead", "Magic System", "Epic Fantasy", "Coming of Age"],
-  description: `In a world where darkness threatens to consume everything, young Aria discovers she possesses an ancient power that could either save her realm or destroy it completely. 
 
-As the last heir to the Midnight Throne, she must navigate treacherous political alliances, master her newfound abilities, and uncover the truth about her family's mysterious past. With the help of unlikely allies and facing impossible odds, Aria embarks on a journey that will test not only her magical prowess but also her courage, wisdom, and heart.
-
-The fate of the realm hangs in the balance, and time is running out. Will Aria embrace her destiny as the Midnight Queen, or will the shadows claim victory once and for all?`,
-  publishedDate: "2023-06-15",
-  lastUpdated: "2024-01-15",
-  wordCount: "450,000",
-  readingTime: "18 hours",
-  language: "English",
-}
-
-const chapters = [
-  { number: 1, title: "The Awakening", publishDate: "2023-06-15", wordCount: 3200 },
-  { number: 2, title: "Shadows of the Past", publishDate: "2023-06-17", wordCount: 3800 },
-  { number: 3, title: "The First Test", publishDate: "2023-06-20", wordCount: 4100 },
-  { number: 4, title: "Allies and Enemies", publishDate: "2023-06-22", wordCount: 3900 },
-  { number: 5, title: "The Hidden Truth", publishDate: "2023-06-25", wordCount: 4300 },
-]
 
 const reviews = [
   {
@@ -56,7 +33,21 @@ const reviews = [
   },
 ]
 
-export default function NovelDetailPage() {
+interface NovelDetailPageProps {
+  params: { id: string }
+}
+
+export default async function NovelDetailPage({ params }: NovelDetailPageProps) {
+  const { id } = await params
+  const cookieStore = await cookies();
+  const tokenCookie = cookieStore.get('token');
+  const cookieString = tokenCookie ? `token=${tokenCookie.value}` : '';
+  const result = await getNovelById(id, cookieString)
+  const novel = result.data as Novel
+
+  if(result.status) {
+  } else return notFound()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -86,7 +77,7 @@ export default function NovelDetailPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <Image
-                src={novel.cover || "/placeholder.svg"}
+                src={novel.coverImage || "/placeholder.svg"}
                 alt={novel.title}
                 width={300}
                 height={400}
@@ -99,22 +90,22 @@ export default function NovelDetailPage() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-4xl font-bold mb-2">{novel.title}</h1>
-                <p className="text-xl text-muted-foreground mb-4">by {novel.author}</p>
+                <p className="text-xl text-muted-foreground mb-4">by {novel.author.name}</p>
 
                 <div className="flex flex-wrap items-center gap-4 mb-6">
                   <div className="flex items-center space-x-1">
                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{novel.rating}</span>
-                    <span className="text-muted-foreground">({novel.totalRatings} ratings)</span>
+                    <span className="font-semibold">{novel.rating.average.toFixed(1)}</span>
+                    <span className="text-muted-foreground">({novel.rating.count} ratings)</span>
                   </div>
                   <Badge variant="secondary">{novel.status}</Badge>
-                  <span className="text-muted-foreground">{novel.chapters} chapters</span>
+                  <span className="text-muted-foreground">{novel.chapters.length} chapters</span>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {novel.genre.map((g) => (
-                    <Badge key={g} variant="outline">
-                      {g}
+                  {novel.genres.map((g) => (
+                    <Badge key={g.name} variant="outline">
+                      {g.name}
                     </Badge>
                   ))}
                 </div>
@@ -126,14 +117,20 @@ export default function NovelDetailPage() {
                       <span>Start Reading</span>
                     </Button>
                   </Link>
-                  <Button size="lg" variant="outline" className="flex items-center space-x-2">
+                  <InteractiveButton novelId={id} typeInteraction="follow" isActived={novel.userInteraction.isFollowing}>
                     <Bookmark className="h-4 w-4" />
-                    <span>Add to Library</span>
-                  </Button>
-                  <Button size="lg" variant="outline" className="flex items-center space-x-2">
-                    <Share className="h-4 w-4" />
-                    <span>Share</span>
-                  </Button>
+                    <span>Follow</span>
+                  </InteractiveButton>
+
+                  <InteractiveButton novelId={id} typeInteraction="favorite" isActived={novel.userInteraction.isFavorited}>
+                    <Heart className="h-4 w-4" />
+                    <span>Favorite</span>
+                  </InteractiveButton>
+                  
+                  <InteractiveButton novelId={id} typeInteraction="feature" isActived={novel.userInteraction.isFeatured}>
+                    <Star className="h-4 w-4" />
+                    <span>Feature</span>
+                  </InteractiveButton>
                 </div>
               </div>
 
@@ -159,21 +156,25 @@ export default function NovelDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-muted rounded-lg">
                 <div className="text-center">
-                  <div className="font-semibold">{novel.wordCount}</div>
-                  <div className="text-sm text-muted-foreground">Words</div>
+                  <div className="font-semibold">{novel.views}</div>
+                  <div className="text-sm text-muted-foreground">Views</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold">{novel.readingTime}</div>
-                  <div className="text-sm text-muted-foreground">Reading Time</div>
+                  <div className="font-semibold">{novel.followers}</div>
+                  <div className="text-sm text-muted-foreground">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold">{novel.language}</div>
-                  <div className="text-sm text-muted-foreground">Language</div>
+                  <div className="font-semibold">{novel.favorites}</div>
+                  <div className="text-sm text-muted-foreground">Favorites</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold">{new Date(novel.lastUpdated).toLocaleDateString()}</div>
+                  <div className="font-semibold">{novel.features}</div>
+                  <div className="text-sm text-muted-foreground">Features</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold">{new Date(novel.updatedAt).toLocaleDateString()}</div>
                   <div className="text-sm text-muted-foreground">Last Updated</div>
                 </div>
               </div>
@@ -182,36 +183,8 @@ export default function NovelDetailPage() {
         </div>
 
         {/* Chapters List */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6">Chapters</h2>
-          <Card>
-            <CardContent className="p-0">
-              {chapters.map((chapter, index) => (
-                <div key={chapter.number}>
-                  <Link href={`/read/${novel.id}/${chapter.number}`}>
-                    <div className="p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-medium">
-                            Chapter {chapter.number}: {chapter.title}
-                          </h3>
-                          <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                            <span>{new Date(chapter.publishDate).toLocaleDateString()}</span>
-                            <span>{chapter.wordCount.toLocaleString()} words</span>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm">
-                          Read
-                        </Button>
-                      </div>
-                    </div>
-                  </Link>
-                  {index < chapters.length - 1 && <Separator />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+        <ChapterList chapters={novel.chapters} novelId={novel.id} />
+        
 
         {/* Reviews */}
         <div>

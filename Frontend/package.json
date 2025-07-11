@@ -51,6 +51,7 @@
     "embla-carousel-react": "8.5.1",
     "express": "latest",
     "express-rate-limit": "latest",
+    "framer-motion": "^12.23.3",
     "fs": "latest",
     "helmet": "latest",
     "http": "latest",

@@ -5,59 +5,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, ChevronLeft, ChevronRight, Settings, Bookmark, Menu, Sun, Moon, Palette } from "lucide-react"
+import { BookOpen, ChevronLeft, ChevronRight, Settings, Bookmark, Heart, Star, Menu, Sun, Moon, Palette } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { updateProgress, toggleBookmark } from "@/app/actions/reading"
+import { getNovelChapterByNumber } from "@/lib/apis/chapter.api"
+import type { Chapter } from "@/lib/apis/types/data.type"
 
-// Mock chapter data
-const chapterData = {
-  1: {
-    title: "The Awakening",
-    content: `The morning mist clung to the ancient stones of Ravenshollow like ghostly fingers, reluctant to release their hold on the world between night and day. Aria Nightwhisper stood at her bedroom window, watching the sun struggle to pierce through the ethereal veil that shrouded her family's ancestral home.
-
-At seventeen, she had grown accustomed to the peculiar atmosphere that seemed to follow her wherever she went. The servants whispered when they thought she couldn't hear, speaking of strange lights that danced around her room at night and shadows that moved independently of their casters. Her grandmother, the formidable Lady Elara, had always dismissed such talk as superstitious nonsense, but Aria knew better.
-
-She could feel it—a power that thrummed beneath her skin like a second heartbeat, growing stronger with each passing day. It called to her in dreams, showed her visions of places she had never been, and whispered secrets in a language she somehow understood despite never having learned it.
-
-Today felt different. The air itself seemed charged with anticipation, as if the very fabric of reality was holding its breath. Aria pressed her palm against the cool glass of the window and gasped as frost began to spread from her touch, creating intricate patterns that resembled ancient runes.
-
-"The time has come," a voice said behind her, causing Aria to spin around in surprise.
-
-Lady Elara stood in the doorway, her silver hair gleaming in the dim light. But there was something different about her grandmother today—her usually stern expression had been replaced by one of profound sadness mixed with what looked almost like... pride?
-
-"Grandmother? What do you mean?" Aria asked, though part of her already knew the answer.
-
-"Your eighteenth birthday approaches, child. And with it, the awakening of your true heritage." Lady Elara stepped into the room, her long robes rustling against the stone floor. "It is time you learned the truth about who you really are, and why the shadows have always been drawn to you."
-
-Aria's heart began to race. All her life, she had felt like an outsider, even within her own family. The strange occurrences, the whispered conversations that stopped when she entered a room, the way certain objects seemed to respond to her emotions—it all suddenly made sense.
-
-"I'm not entirely human, am I?" she whispered.
-
-Lady Elara's smile was both sad and proud. "No, my dear. You are so much more than that. You are the last heir to the Midnight Throne, the final hope of a realm that has been lost to darkness for over a century."
-
-The words hit Aria like a physical blow. She sank onto her bed, her mind reeling with the implications. "The Midnight Throne? But that's just a legend, a story from the old books..."
-
-"The stories are real, Aria. Every single one of them." Lady Elara moved to sit beside her granddaughter, her weathered hand gently taking Aria's trembling one. "Your mother was the Crown Princess of the Shadow Realm, and your father... your father was the Guardian of the Veil, the bridge between our world and theirs."
-
-Tears began to flow down Aria's cheeks as the truth she had always suspected finally came to light. "They're dead, aren't they? That's why I've always felt so alone."
-
-"They died protecting both realms from an ancient evil that sought to merge the worlds and rule over the resulting chaos. But before they fell, they managed to hide you here, in the mortal realm, where you could grow strong enough to one day reclaim your birthright."
-
-Aria looked down at her hands, watching as shadows began to dance between her fingers without her conscious control. "I don't know if I'm strong enough for this, Grandmother. I can barely control what's happening to me now."
-
-"Strength isn't about control, child. It's about acceptance. Accept who you are, embrace your power, and trust in the bonds you will forge along the way." Lady Elara stood and walked to an ancient chest that had always sat in the corner of Aria's room, locked and mysterious. "Your training begins now."
-
-As the chest opened with a sound like distant thunder, a soft, otherworldly light spilled out, and Aria knew that her ordinary life was about to end forever. The awakening had begun, and with it, a journey that would determine the fate of two worlds.
-
-The shadows whispered her name, and for the first time in her life, Aria whispered back.`,
-  },
-}
 
 export default function ReadingPage() {
+  const router = useRouter()
   const params = useParams()
   const novelId = params.id as string
   const chapterNumber = Number.parseInt(params.chapter as string)
+
 
   const [fontSize, setFontSize] = useState([16])
   const [fontFamily, setFontFamily] = useState("serif")
@@ -65,6 +26,7 @@ export default function ReadingPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
+  const [chapter, setChapter] = useState<Chapter | null>(null)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -88,15 +50,50 @@ export default function ReadingPage() {
       }
     }
 
-    loadUserData()
+    // loadUserData()
   }, [novelId, chapterNumber])
 
   // Update reading progress when chapter changes
   useEffect(() => {
     if (user) {
-      updateProgress(novelId, chapterNumber, 0) // Start of chapter
+      // updateProgress(novelId, chapterNumber, 0) // Start of chapter
     }
   }, [user, novelId, chapterNumber])
+
+  useEffect(() => {
+    async function fetchChapter() {
+      try {
+        const result = await getNovelChapterByNumber(novelId, chapterNumber)
+        if (result.status === 200) {
+          console.log(result)
+          setChapter(result.data)
+        } else {
+          setChapter(null)
+        }
+      } catch (error) {
+        console.error("Failed to load chapter:", error)
+        setChapter(null)
+      }
+    }
+
+    fetchChapter()
+    }, [novelId, chapterNumber])
+
+    useEffect(() => {
+      const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if ((e.ctrlKey && e.key === 'c') || (e.ctrlKey && e.key === 'u')) {
+          e.preventDefault();
+        }
+      };
+      document.addEventListener('contextmenu', handleContextMenu);
+      document.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.removeEventListener('contextmenu', handleContextMenu);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }, []);
 
   // Add bookmark toggle function:
   const handleBookmarkToggle = async () => {
@@ -109,8 +106,6 @@ export default function ReadingPage() {
       console.error("Failed to toggle bookmark:", error)
     }
   }
-
-  const chapter = chapterData[chapterNumber as keyof typeof chapterData]
 
   const fontFamilies = {
     serif: "font-serif",
@@ -206,8 +201,9 @@ export default function ReadingPage() {
         </Card>
       )}
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+
+      {
+        chapter ? (<div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
             Chapter {chapterNumber}: {chapter.title}
@@ -224,7 +220,7 @@ export default function ReadingPage() {
           style={{ fontSize: `${fontSize[0]}px` }}
         >
           {chapter.content.split("\n\n").map((paragraph, index) => (
-            <p key={index} className="mb-6">
+            <p key={index} className="mb-6 text-justify select-none">
               {paragraph}
             </p>
           ))}
@@ -236,8 +232,20 @@ export default function ReadingPage() {
             <ChevronLeft className="h-4 w-4 mr-2" />
             Previous Chapter
           </Button>
+          <Select value={chapterNumber.toString()} onValueChange={(value) =>
+            router.push(`/read/${novelId}/${Number(value)}`)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: chapter.navigation.totalChapters }, (_, i) => i + 1).map((num) => (
+                <SelectItem key={num} value={num.toString()}>
+                  Chapter {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <div className="text-sm text-muted-foreground">Chapter {chapterNumber} of 45</div>
 
           <Link href={`/read/${novelId}/${chapterNumber + 1}`}>
             <Button>
@@ -246,7 +254,10 @@ export default function ReadingPage() {
             </Button>
           </Link>
         </div>
-      </div>
+      </div>) : (<>Chapter not found</>)
+      }
+      {/* Main Content */}
+      
     </div>
   )
 }

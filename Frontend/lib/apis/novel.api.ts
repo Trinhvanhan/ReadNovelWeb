@@ -11,9 +11,13 @@ export const getNovels = async (): Promise<ApiResponse> => {
   }
 };
 
-export const getNovelById = async (id: string): Promise<ApiResponse> => {
+export const getNovelById = async (id: string, cookie?: string): Promise<ApiResponse> => {
   try {
-    const res = await axiosi.get(`/novels/${id}`) as ApiResponse;
+    const res = await axiosi.get(`/novels/${id}`, {
+      headers: {
+        ...(cookie ? { Cookie: cookie } : {}),
+      },
+    });
     return res;
   } catch (error: any) {
     throw error.response?.data || { message: 'Failed to fetch novel' };

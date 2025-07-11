@@ -1,5 +1,5 @@
 "use server"
-import { deleteSession } from "@/lib/auth"
+import { deleteCookies } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { sendWelcomeEmail, sendAdminNewUserNotification } from "@/lib/notifications"
@@ -104,6 +104,6 @@ const loginSchema = z.object({
 // }
 
 export async function logout() {
-  await deleteSession()
+  await deleteCookies()
   redirect("/")
 }
